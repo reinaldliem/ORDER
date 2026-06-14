@@ -1,0 +1,1075 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Order Management</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: Arial, sans-serif; background: #f0f2f5; color: #1a1a1a; min-height: 100vh; }
+
+  header {
+    background: #1e3a5f;
+    color: white;
+    padding: 16px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  }
+  header h1 { font-size: 20px; font-weight: 600; letter-spacing: 0.5px; }
+  #live-date { font-size: 14px; opacity: 0.85; }
+
+  .tabs {
+    display: flex;
+    background: #fff;
+    border-bottom: 2px solid #e0e0e0;
+    padding: 0 24px;
+  }
+  .tab-btn {
+    padding: 12px 20px;
+    border: none;
+    background: none;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    color: #666;
+    border-bottom: 3px solid transparent;
+    margin-bottom: -2px;
+    transition: all 0.2s;
+  }
+  .tab-btn.active { color: #1e3a5f; border-bottom-color: #1e3a5f; }
+  .tab-btn:hover { color: #1e3a5f; background: #f5f7fa; }
+
+  .page { display: none; padding: 24px; max-width: 1100px; margin: 0 auto; }
+  .page.active { display: block; }
+
+  .card {
+    background: #fff;
+    border-radius: 10px;
+    padding: 24px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+    margin-bottom: 20px;
+  }
+  .card h2 { font-size: 16px; font-weight: 600; margin-bottom: 16px; color: #1e3a5f; }
+
+  .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; }
+  .form-group { display: flex; flex-direction: column; gap: 6px; }
+  .form-group label { font-size: 13px; font-weight: 500; color: #444; }
+  .form-group input, .form-group select {
+    padding: 10px 12px;
+    border: 1.5px solid #ddd;
+    border-radius: 7px;
+    font-size: 14px;
+    transition: border-color 0.2s;
+    background: #fff;
+    color: #1a1a1a;
+  }
+  .form-group input:focus, .form-group select:focus {
+    outline: none;
+    border-color: #1e3a5f;
+  }
+  .form-group input[readonly] { background: #f5f7fa; color: #555; }
+
+  .items-section { margin-top: 16px; }
+  .items-section h3 { font-size: 14px; font-weight: 600; margin-bottom: 10px; color: #333; }
+
+  .item-row {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr auto;
+    gap: 10px;
+    align-items: center;
+    margin-bottom: 10px;
+  }
+  .item-row input, .item-row select {
+    padding: 9px 11px;
+    border: 1.5px solid #ddd;
+    border-radius: 7px;
+    font-size: 14px;
+    background: #fff;
+    color: #1a1a1a;
+  }
+  .item-row input:focus, .item-row select:focus { outline: none; border-color: #1e3a5f; }
+
+  .btn {
+    padding: 10px 18px;
+    border: none;
+    border-radius: 7px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .btn-primary { background: #1e3a5f; color: white; }
+  .btn-primary:hover { background: #163050; }
+  .btn-success { background: #2e7d32; color: white; }
+  .btn-success:hover { background: #256427; }
+  .btn-danger { background: #c62828; color: white; }
+  .btn-danger:hover { background: #a01e1e; }
+  .btn-outline {
+    background: transparent;
+    border: 1.5px solid #1e3a5f;
+    color: #1e3a5f;
+  }
+  .btn-outline:hover { background: #f0f4f8; }
+  .btn-sm { padding: 6px 12px; font-size: 13px; }
+  .btn-icon { padding: 8px 10px; font-size: 14px; }
+
+  .btn-add-row {
+    background: #e8f0fe;
+    color: #1e3a5f;
+    border: 1.5px dashed #1e3a5f;
+    width: 100%;
+    margin-top: 6px;
+    padding: 9px;
+    border-radius: 7px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 500;
+    transition: background 0.2s;
+  }
+  .btn-add-row:hover { background: #d0e1f9; }
+
+  .total-box {
+    background: #f0f4f8;
+    border-radius: 8px;
+    padding: 14px 18px;
+    margin-top: 16px;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 12px;
+  }
+  .total-box span { font-size: 14px; color: #555; }
+  .total-box strong { font-size: 20px; color: #1e3a5f; font-weight: 700; }
+
+  .form-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 16px; }
+
+  /* Table */
+  .table-toolbar {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    margin-bottom: 14px;
+    flex-wrap: wrap;
+  }
+  .search-input {
+    flex: 1;
+    min-width: 180px;
+    padding: 9px 13px;
+    border: 1.5px solid #ddd;
+    border-radius: 7px;
+    font-size: 14px;
+  }
+  .search-input:focus { outline: none; border-color: #1e3a5f; }
+
+  .filter-select {
+    padding: 9px 13px;
+    border: 1.5px solid #ddd;
+    border-radius: 7px;
+    font-size: 14px;
+    background: #fff;
+    min-width: 140px;
+  }
+
+  .table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th {
+    background: #f0f4f8;
+    padding: 10px 12px;
+    text-align: left;
+    font-weight: 600;
+    color: #1e3a5f;
+    border-bottom: 2px solid #ddd;
+    white-space: nowrap;
+  }
+  td { padding: 10px 12px; border-bottom: 1px solid #f0f0f0; vertical-align: top; }
+  tr:hover td { background: #f9fbfd; }
+  .badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 500;
+  }
+  .badge-pending { background: #fff3e0; color: #e65100; }
+  .badge-done { background: #e8f5e9; color: #2e7d32; }
+
+  .no-data { text-align: center; padding: 40px; color: #999; font-size: 14px; }
+
+  /* Summary cards */
+  .summary-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 14px;
+    margin-bottom: 20px;
+  }
+  .summary-card {
+    background: #fff;
+    border-radius: 10px;
+    padding: 18px 20px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+  }
+  .summary-card .label { font-size: 12px; color: #888; margin-bottom: 6px; }
+  .summary-card .value { font-size: 22px; font-weight: 700; color: #1e3a5f; }
+  .summary-card .sub { font-size: 12px; color: #aaa; margin-top: 2px; }
+
+  /* Admin */
+  .list-manage { display: flex; flex-direction: column; gap: 8px; }
+  .list-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 14px;
+    background: #f5f7fa;
+    border-radius: 7px;
+    font-size: 14px;
+  }
+  .add-item-row { display: flex; gap: 8px; margin-top: 10px; }
+  .add-item-row input { flex: 1; padding: 9px 12px; border: 1.5px solid #ddd; border-radius: 7px; font-size: 14px; }
+  .add-item-row input:focus { outline: none; border-color: #1e3a5f; }
+
+  /* Modal */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.45);
+    z-index: 100;
+    align-items: center;
+    justify-content: center;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: #fff;
+    border-radius: 12px;
+    padding: 24px;
+    max-width: 600px;
+    width: 90%;
+    max-height: 80vh;
+    overflow-y: auto;
+  }
+  .modal h2 { font-size: 17px; color: #1e3a5f; margin-bottom: 16px; }
+  .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 16px; }
+
+  .detail-row { display: flex; gap: 8px; margin-bottom: 8px; font-size: 14px; }
+  .detail-row .dk { width: 130px; color: #777; flex-shrink: 0; }
+  .detail-row .dv { font-weight: 500; }
+
+  .detail-table th, .detail-table td { padding: 8px 10px; font-size: 13px; }
+
+  @media (max-width: 600px) {
+    .item-row { grid-template-columns: 1fr 1fr; }
+    .item-row > *:last-child { grid-column: span 2; }
+    header h1 { font-size: 16px; }
+  }
+
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    background: #2e7d32;
+    color: white;
+    padding: 12px 20px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    z-index: 200;
+    opacity: 0;
+    transform: translateY(10px);
+    transition: all 0.3s;
+    pointer-events: none;
+  }
+  .toast.show { opacity: 1; transform: translateY(0); }
+
+  /* Login */
+  .login-overlay {
+    position: fixed; inset: 0; background: #1e3a5f;
+    display: flex; align-items: center; justify-content: center; z-index: 300; padding: 20px;
+  }
+  .login-box {
+    background: #fff; border-radius: 14px; padding: 32px 28px;
+    width: 100%; max-width: 360px; box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+  }
+  .login-box h1 { font-size: 22px; color: #1e3a5f; text-align: center; }
+  .login-sub { font-size: 13px; color: #888; text-align: center; margin: 6px 0 22px; }
+  .login-box .form-group label { font-size: 13px; font-weight: 500; color: #444; }
+  .login-box input {
+    padding: 11px 13px; border: 1.5px solid #ddd; border-radius: 8px;
+    font-size: 15px; width: 100%;
+  }
+  .login-box input:focus { outline: none; border-color: #1e3a5f; }
+  .login-err { color: #c62828; font-size: 13px; text-align: center; margin-top: 12px; min-height: 18px; }
+  .role-hidden { display: none !important; }
+</style>
+</head>
+<body>
+
+<!-- LOGIN OVERLAY -->
+<div class="login-overlay" id="login-overlay">
+  <div class="login-box">
+    <h1>📋 Order Management</h1>
+    <p class="login-sub">Masuk dengan ID & PIN Anda</p>
+    <div class="form-group" style="margin-bottom:12px;">
+      <label>ID Pengguna</label>
+      <input type="text" id="login-id" placeholder="contoh: admin" autocomplete="username"
+             onkeydown="if(event.key==='Enter')document.getElementById('login-pin').focus()">
+    </div>
+    <div class="form-group" style="margin-bottom:16px;">
+      <label>PIN</label>
+      <input type="password" id="login-pin" placeholder="PIN" inputmode="numeric" autocomplete="current-password"
+             onkeydown="if(event.key==='Enter')doLogin()">
+    </div>
+    <button class="btn btn-success" id="login-btn" style="width:100%;" onclick="doLogin()">Masuk</button>
+    <p class="login-err" id="login-err"></p>
+  </div>
+</div>
+
+<div id="app" style="display:none;">
+
+<header>
+  <h1>📋 Order Management</h1>
+  <div style="display:flex;align-items:center;gap:16px;">
+    <span id="live-date"></span>
+    <span id="user-badge" style="font-size:13px;background:rgba(255,255,255,0.15);padding:5px 12px;border-radius:20px;"></span>
+    <button class="btn btn-sm" style="background:rgba(255,255,255,0.2);color:#fff;" onclick="logout()">Keluar</button>
+  </div>
+</header>
+
+<div class="tabs">
+  <button class="tab-btn active" onclick="showTab('order')">Buat Order</button>
+  <button class="tab-btn" id="tab-list" onclick="showTab('list')">Daftar Order</button>
+  <button class="tab-btn" id="tab-admin" onclick="showTab('admin')">Pengaturan</button>
+</div>
+
+<!-- PAGE: ORDER FORM -->
+<div class="page active" id="page-order">
+  <div class="card">
+    <h2>Form Order Baru</h2>
+    <div class="form-grid">
+      <div class="form-group">
+        <label>Tanggal</label>
+        <input type="text" id="order-date" readonly>
+      </div>
+      <div class="form-group">
+        <label>No. Order</label>
+        <input type="text" id="order-no" readonly>
+      </div>
+      <div class="form-group">
+        <label>Sales</label>
+        <select id="order-sales">
+          <option value="">-- Pilih Sales --</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Nama Pelanggan</label>
+        <input type="text" id="order-customer" placeholder="Nama pelanggan">
+      </div>
+    </div>
+
+    <div class="items-section">
+      <h3>Detail Barang</h3>
+      <div class="item-row" style="margin-bottom:6px;">
+        <span style="font-size:12px;color:#888;font-weight:600;">BARANG</span>
+        <span style="font-size:12px;color:#888;font-weight:600;">QTY</span>
+        <span style="font-size:12px;color:#888;font-weight:600;">HARGA (Rp)</span>
+        <span></span>
+      </div>
+      <div id="items-container"></div>
+      <datalist id="barang-options"></datalist>
+      <button class="btn-add-row" onclick="addItemRow()">+ Tambah Barang</button>
+    </div>
+
+    <div class="total-box">
+      <span>Total:</span>
+      <strong id="grand-total">Rp 0</strong>
+    </div>
+
+    <div class="form-actions">
+      <button class="btn btn-outline" onclick="resetForm()">Reset</button>
+      <button class="btn btn-success" id="save-btn" onclick="saveOrder()">💾 Simpan Order</button>
+    </div>
+  </div>
+</div>
+
+<!-- PAGE: ORDER LIST -->
+<div class="page" id="page-list">
+  <div class="summary-grid">
+    <div class="summary-card">
+      <div class="label">Total Order</div>
+      <div class="value" id="sum-total">0</div>
+      <div class="sub">semua order</div>
+    </div>
+    <div class="summary-card">
+      <div class="label">Nilai Order</div>
+      <div class="value" id="sum-value">Rp 0</div>
+      <div class="sub">total nilai</div>
+    </div>
+    <div class="summary-card">
+      <div class="label">Hari Ini</div>
+      <div class="value" id="sum-today">0</div>
+      <div class="sub">order hari ini</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="table-toolbar">
+      <input class="search-input" type="text" placeholder="Cari no. order, pelanggan, sales..." oninput="filterOrders()">
+      <select class="filter-select" onchange="filterOrders()" id="filter-sales">
+        <option value="">Semua Sales</option>
+      </select>
+      <button class="btn btn-outline btn-sm" id="export-btn" onclick="exportCSV()">⬇ Export CSV</button>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>No. Order</th>
+            <th>Tanggal</th>
+            <th>Sales</th>
+            <th>Pelanggan</th>
+            <th>Item</th>
+            <th>Total</th>
+            <th>Aksi</th>
+          </tr>
+        </thead>
+        <tbody id="orders-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- PAGE: ADMIN -->
+<div class="page" id="page-admin">
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;flex-wrap:wrap;">
+    <div class="card">
+      <h2>Akun Pengguna (Sales & Admin)</h2>
+      <div class="list-manage" id="users-list"></div>
+      <div style="margin-top:12px;display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+        <input type="text" id="new-user-id" placeholder="ID (nama login)" style="padding:9px 12px;border:1.5px solid #ddd;border-radius:7px;font-size:14px;">
+        <input type="text" id="new-user-pin" placeholder="PIN" inputmode="numeric" style="padding:9px 12px;border:1.5px solid #ddd;border-radius:7px;font-size:14px;">
+        <select id="new-user-role" style="padding:9px 12px;border:1.5px solid #ddd;border-radius:7px;font-size:14px;">
+          <option value="sales">Sales</option>
+          <option value="admin">Admin</option>
+        </select>
+        <button class="btn btn-primary" onclick="addUser()">Tambah Akun</button>
+      </div>
+    </div>
+    <div class="card">
+      <h2>Daftar Barang</h2>
+      <div class="list-manage" id="barang-list"></div>
+      <div class="add-item-row">
+        <input type="text" id="new-barang" placeholder="Nama barang baru...">
+        <button class="btn btn-primary" onclick="addBarang()">Tambah</button>
+      </div>
+    </div>
+  </div>
+  <div class="card" style="margin-top:0;">
+    <h2>Pengaturan Harga Default Barang</h2>
+    <p style="font-size:13px;color:#888;margin-bottom:12px;">Harga default akan otomatis terisi saat memilih barang di form order.</p>
+    <div id="price-list"></div>
+  </div>
+</div>
+
+<!-- DETAIL MODAL -->
+<div class="modal-overlay" id="detail-modal">
+  <div class="modal">
+    <h2>Detail Order</h2>
+    <div id="modal-content"></div>
+    <div class="modal-actions">
+      <button class="btn btn-danger btn-sm" onclick="deleteCurrentOrder()">🗑 Hapus</button>
+      <button class="btn btn-primary btn-sm" onclick="editOrder(currentOrderId)">✏ Edit</button>
+      <button class="btn btn-outline" onclick="closeModal()">Tutup</button>
+    </div>
+  </div>
+</div>
+
+</div><!-- /#app -->
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ====================================================================
+   KONFIGURASI SERVER
+   Tempelkan URL Web App dari Google Apps Script di bawah ini agar
+   data tersimpan online & bisa diakses banyak orang dari perangkat
+   berbeda. Lihat Code.gs / SETUP-BACKEND.md untuk langkah-langkahnya.
+   Biarkan kosong ('') untuk mode offline (data di browser ini saja).
+==================================================================== */
+const API_URL = 'https://script.google.com/macros/s/AKfycbyjUGVPHqmzybXiUKtCBIcRWKMtFOzCFykWpoYSMJ0mhHHw1lYNDxM42NiixNk5zBEB/exec';
+const USE_SERVER = !!API_URL;
+
+let orders = [];
+let salesList = [];
+let barangList = [];
+let priceMap = {};
+let usersList = [];
+let currentUser = null;   // { id, pin, role }
+let currentOrderId = null;
+let editingNo = null;
+let itemCount = 0;
+
+const isAdmin = () => currentUser && currentUser.role === 'admin';
+
+/* ---- Otentikasi & pemuatan data dari server ---- */
+async function fetchData(id, pin) {
+  const url = API_URL + '?id=' + encodeURIComponent(id) + '&pin=' + encodeURIComponent(pin);
+  const r = await fetch(url);
+  if (!r.ok) throw new Error('Gagal terhubung ke server');
+  return await r.json();
+}
+
+function applyData(d) {
+  orders = d.orders || [];
+  salesList = d.salesList || [];
+  barangList = d.barangList || [];
+  priceMap = d.priceMap || {};
+  usersList = d.users || [];
+}
+
+async function loadData() {
+  try {
+    const d = await fetchData(currentUser.id, currentUser.pin);
+    if (!d.ok) { logout(); return; }
+    applyData(d);
+  } catch (e) {
+    showToast('Gagal terhubung ke server. Periksa koneksi.', 'error');
+    console.error(e);
+  }
+}
+
+/* ---- Tulis ke server (selalu sertakan auth) ---- */
+async function apiPost(payload) {
+  payload.auth = { id: currentUser.id, pin: currentUser.pin };
+  const r = await fetch(API_URL, { method: 'POST', body: JSON.stringify(payload) });
+  if (!r.ok) throw new Error('Gagal menyimpan data');
+  const res = await r.json();
+  if (!res.ok && res.error === 'forbidden') showToast('Anda tidak punya akses untuk aksi ini.', 'error');
+  return res;
+}
+
+/* ---- Login / Logout ---- */
+async function doLogin() {
+  const id = document.getElementById('login-id').value.trim();
+  const pin = document.getElementById('login-pin').value.trim();
+  const err = document.getElementById('login-err');
+  const btn = document.getElementById('login-btn');
+  err.textContent = '';
+  if (!id || !pin) { err.textContent = 'ID dan PIN wajib diisi.'; return; }
+  btn.disabled = true; btn.textContent = 'Memeriksa...';
+  try {
+    const d = await fetchData(id, pin);
+    if (!d.ok) { err.textContent = 'ID atau PIN salah.'; return; }
+    currentUser = { id, pin, role: d.role };
+    sessionStorage.setItem('auth', JSON.stringify(currentUser));
+    applyData(d);
+    enterApp();
+  } catch (e) {
+    err.textContent = 'Tidak bisa terhubung ke server.';
+    console.error(e);
+  } finally {
+    btn.disabled = false; btn.textContent = 'Masuk';
+  }
+}
+
+function logout() {
+  sessionStorage.removeItem('auth');
+  currentUser = null;
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('login-overlay').style.display = 'flex';
+  document.getElementById('login-pin').value = '';
+}
+
+function enterApp() {
+  document.getElementById('login-overlay').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  document.getElementById('user-badge').textContent =
+    currentUser.id + ' · ' + (isAdmin() ? 'Admin' : 'Sales');
+  applyRoleUI();
+  initForm();
+  showTab('order');
+}
+
+/* Sembunyikan menu/tombol yang bukan untuk peran ini */
+function applyRoleUI() {
+  const admin = isAdmin();
+  document.getElementById('tab-admin').classList.toggle('role-hidden', !admin);
+  const exp = document.getElementById('export-btn');
+  if (exp) exp.classList.toggle('role-hidden', !admin);
+  const fs = document.getElementById('filter-sales');
+  if (fs) fs.classList.toggle('role-hidden', !admin);
+  document.getElementById('tab-list').textContent = admin ? 'Daftar Order' : 'Order Saya';
+}
+
+const MONTHS = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+
+function today() {
+  const d = new Date();
+  return `${d.getDate()} ${MONTHS[d.getMonth()]} ${d.getFullYear()}`;
+}
+
+function todayKey() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+
+function genOrderNo() {
+  const d = new Date();
+  const p = n => String(n).padStart(2, '0');
+  const stamp = `${d.getFullYear()}${p(d.getMonth()+1)}${p(d.getDate())}-${p(d.getHours())}${p(d.getMinutes())}${p(d.getSeconds())}`;
+  const rnd = String(Math.floor(Math.random() * 90) + 10); // 2 digit, hindari tabrakan antar-sales
+  return `ORD-${stamp}-${rnd}`;
+}
+
+function formatRp(n) {
+  return 'Rp ' + Number(n).toLocaleString('id-ID');
+}
+
+function showTab(t) {
+  if (t === 'admin' && !isAdmin()) return;
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-' + t).classList.add('active');
+  const btnId = t === 'order' ? null : 'tab-' + t;
+  if (btnId) document.getElementById(btnId).classList.add('active');
+  else document.querySelector('.tab-btn').classList.add('active');
+  if (t === 'list') renderOrderList();
+  if (t === 'admin') renderAdmin();
+}
+
+function initForm() {
+  editingNo = null;
+  document.querySelector('#page-order .card h2').textContent = 'Form Order Baru';
+  document.getElementById('save-btn').textContent = '💾 Simpan Order';
+  document.getElementById('order-date').value = today();
+  document.getElementById('order-no').value = genOrderNo();
+  document.getElementById('items-container').innerHTML = '';
+  refreshBarangOptions();
+  const sel = document.getElementById('order-sales');
+  if (isAdmin()) {
+    sel.disabled = false;
+    sel.innerHTML = '<option value="">-- Pilih Sales --</option>';
+    salesList.forEach(s => {
+      const o = document.createElement('option');
+      o.value = s; o.textContent = s;
+      sel.appendChild(o);
+    });
+  } else {
+    // Sales hanya bisa atas namanya sendiri
+    sel.innerHTML = `<option value="${currentUser.id}">${currentUser.id}</option>`;
+    sel.value = currentUser.id;
+    sel.disabled = true;
+  }
+  document.getElementById('order-customer').value = '';
+  itemCount = 0;
+  addItemRow();
+  calcTotal();
+}
+
+function editOrder(no) {
+  const o = orders.find(x => x.no === no);
+  if (!o) return;
+  closeModal();
+  showTab('order');
+  initForm();
+  editingNo = no;
+  document.querySelector('#page-order .card h2').textContent = 'Edit Order — ' + no;
+  document.getElementById('save-btn').textContent = '💾 Simpan Perubahan';
+  document.getElementById('order-date').value = o.date;
+  document.getElementById('order-no').value = o.no;
+  document.getElementById('order-sales').value = o.sales;
+  document.getElementById('order-customer').value = o.customer;
+  document.getElementById('items-container').innerHTML = '';
+  o.items.forEach(it => {
+    addItemRow();
+    const row = document.getElementById('items-container').lastElementChild;
+    row.querySelector('.barang-input').value = it.barang;
+    const nums = row.querySelectorAll('input[type=number]');
+    nums[0].value = it.qty;
+    nums[1].value = it.harga;
+  });
+  calcTotal();
+}
+
+function addItemRow() {
+  itemCount++;
+  const id = 'item-' + itemCount;
+  const div = document.createElement('div');
+  div.className = 'item-row';
+  div.id = id;
+
+  div.innerHTML = `
+    <input list="barang-options" class="barang-input" placeholder="Pilih / ketik barang" onchange="onBarangChange(this, '${id}')">
+    <input type="number" min="1" value="1" placeholder="Qty" oninput="calcTotal()">
+    <input type="number" min="0" value="0" placeholder="Harga" oninput="calcTotal()">
+    <button class="btn btn-danger btn-icon" onclick="removeRow('${id}')">✕</button>
+  `;
+  document.getElementById('items-container').appendChild(div);
+  calcTotal();
+}
+
+function onBarangChange(inp, rowId) {
+  const row = document.getElementById(rowId);
+  const barang = inp.value.trim();
+  const priceInput = row.querySelectorAll('input[type=number]')[1];
+  if (barang && priceMap[barang] && (!priceInput.value || priceInput.value === '0')) {
+    priceInput.value = priceMap[barang];
+  }
+  calcTotal();
+}
+
+function refreshBarangOptions() {
+  document.getElementById('barang-options').innerHTML =
+    barangList.map(b => `<option value="${b}">`).join('');
+}
+
+function removeRow(id) {
+  const el = document.getElementById(id);
+  if (el) el.remove();
+  calcTotal();
+}
+
+function calcTotal() {
+  let total = 0;
+  document.querySelectorAll('#items-container .item-row').forEach(row => {
+    const nums = row.querySelectorAll('input[type=number]');
+    const qty = parseFloat(nums[0].value) || 0;
+    const harga = parseFloat(nums[1].value) || 0;
+    total += qty * harga;
+  });
+  document.getElementById('grand-total').textContent = formatRp(total);
+}
+
+function getItems() {
+  const items = [];
+  document.querySelectorAll('#items-container .item-row').forEach(row => {
+    const barang = row.querySelector('.barang-input').value.trim();
+    const nums = row.querySelectorAll('input[type=number]');
+    const qty = parseFloat(nums[0].value) || 0;
+    const harga = parseFloat(nums[1].value) || 0;
+    if (barang) items.push({ barang, qty, harga, subtotal: qty * harga });
+  });
+  return items;
+}
+
+async function saveOrder() {
+  const sales = document.getElementById('order-sales').value;
+  const customer = document.getElementById('order-customer').value.trim();
+  if (!sales) { showToast('Pilih sales terlebih dahulu!', 'error'); return; }
+  if (!customer) { showToast('Isi nama pelanggan!', 'error'); return; }
+  const items = getItems();
+  if (!items.length) { showToast('Tambahkan minimal 1 barang!', 'error'); return; }
+
+  const total = items.reduce((s, i) => s + i.subtotal, 0);
+  const btn = document.getElementById('save-btn');
+  const label = btn.textContent;
+  btn.disabled = true; btn.textContent = 'Menyimpan...';
+
+  try {
+    let order;
+    if (editingNo) {
+      const existing = orders.find(o => o.no === editingNo) || {};
+      order = { ...existing, no: editingNo, sales, customer, items, total, editedAt: new Date().toISOString() };
+    } else {
+      order = {
+        no: document.getElementById('order-no').value,
+        date: today(),
+        dateKey: todayKey(),
+        sales, customer, items, total,
+        createdAt: new Date().toISOString()
+      };
+    }
+    await apiPost({ action: 'saveOrder', order });
+    await loadData();
+    showToast(editingNo ? 'Perubahan order disimpan!' : 'Order berhasil disimpan!');
+    const wasEditing = editingNo;
+    resetForm();
+    if (wasEditing) showTab('list');
+  } catch (e) {
+    showToast('Gagal menyimpan order!', 'error');
+    console.error(e);
+  } finally {
+    btn.disabled = false; btn.textContent = label;
+  }
+}
+
+function resetForm() { initForm(); }
+
+function renderOrderList() {
+  updateSummary();
+  const sel = document.getElementById('filter-sales');
+  sel.innerHTML = '<option value="">Semua Sales</option>';
+  salesList.forEach(s => { const o = document.createElement('option'); o.value = s; o.textContent = s; sel.appendChild(o); });
+  filterOrders();
+}
+
+function filterOrders() {
+  const q = document.querySelector('.search-input').value.toLowerCase();
+  const sf = document.getElementById('filter-sales').value;
+  const filtered = orders.filter(o =>
+    (o.no.toLowerCase().includes(q) || o.customer.toLowerCase().includes(q) || o.sales.toLowerCase().includes(q)) &&
+    (!sf || o.sales === sf)
+  );
+  const tbody = document.getElementById('orders-tbody');
+  if (!filtered.length) {
+    tbody.innerHTML = `<tr><td colspan="7" class="no-data">Tidak ada order ditemukan</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = filtered.map(o => `
+    <tr>
+      <td><b>${o.no}</b></td>
+      <td>${o.date}</td>
+      <td>${o.sales}</td>
+      <td>${o.customer}</td>
+      <td>${o.items.length} item(s)</td>
+      <td><b>${formatRp(o.total)}</b></td>
+      <td style="white-space:nowrap;">
+        <button class="btn btn-outline btn-sm" onclick="showDetail('${o.no}')">Detail</button>
+        <button class="btn btn-primary btn-sm" onclick="editOrder('${o.no}')">Edit</button>
+      </td>
+    </tr>
+  `).join('');
+}
+
+function updateSummary() {
+  const todayK = todayKey();
+  document.getElementById('sum-total').textContent = orders.length;
+  document.getElementById('sum-value').textContent = formatRp(orders.reduce((s, o) => s + o.total, 0));
+  document.getElementById('sum-today').textContent = orders.filter(o => o.dateKey === todayK).length;
+}
+
+function showDetail(no) {
+  const o = orders.find(x => x.no === no);
+  if (!o) return;
+  currentOrderId = no;
+  const rows = o.items.map(i => `
+    <tr>
+      <td>${i.barang}</td>
+      <td style="text-align:center">${i.qty}</td>
+      <td>${formatRp(i.harga)}</td>
+      <td>${formatRp(i.subtotal)}</td>
+    </tr>
+  `).join('');
+  document.getElementById('modal-content').innerHTML = `
+    <div class="detail-row"><span class="dk">No. Order</span><span class="dv">${o.no}</span></div>
+    <div class="detail-row"><span class="dk">Tanggal</span><span class="dv">${o.date}</span></div>
+    <div class="detail-row"><span class="dk">Sales</span><span class="dv">${o.sales}</span></div>
+    <div class="detail-row"><span class="dk">Pelanggan</span><span class="dv">${o.customer}</span></div>
+    <div style="margin-top:14px;">
+      <table class="detail-table" style="width:100%;border-collapse:collapse;font-size:13px;">
+        <thead><tr style="background:#f0f4f8;">
+          <th style="padding:8px 10px;text-align:left;">Barang</th>
+          <th style="padding:8px 10px;text-align:center;">Qty</th>
+          <th style="padding:8px 10px;text-align:left;">Harga</th>
+          <th style="padding:8px 10px;text-align:left;">Subtotal</th>
+        </tr></thead>
+        <tbody>${rows}</tbody>
+        <tfoot><tr>
+          <td colspan="3" style="padding:10px;font-weight:700;text-align:right;">TOTAL</td>
+          <td style="padding:10px;font-weight:700;color:#1e3a5f;">${formatRp(o.total)}</td>
+        </tr></tfoot>
+      </table>
+    </div>
+  `;
+  document.getElementById('detail-modal').classList.add('open');
+}
+
+function closeModal() {
+  document.getElementById('detail-modal').classList.remove('open');
+  currentOrderId = null;
+}
+
+async function deleteCurrentOrder() {
+  if (!currentOrderId) return;
+  if (!confirm('Hapus order ' + currentOrderId + '?')) return;
+  const no = currentOrderId;
+  try {
+    await apiPost({ action: 'deleteOrder', no });
+    await loadData();
+    closeModal();
+    filterOrders();
+    updateSummary();
+    showToast('Order dihapus.');
+  } catch (e) {
+    showToast('Gagal menghapus order!', 'error');
+    console.error(e);
+  }
+}
+
+function renderAdmin() {
+  renderUsersList();
+  renderBarangList();
+  renderPriceList();
+}
+
+async function saveConfig(key, value) {
+  await apiPost({ action: 'setConfig', key, value });
+}
+
+function renderUsersList() {
+  document.getElementById('users-list').innerHTML = usersList.map(u => `
+    <div class="list-item">
+      <span><b>${u.id}</b>
+        <span class="badge ${u.role === 'admin' ? 'badge-done' : 'badge-pending'}" style="margin-left:8px;">${u.role}</span>
+        <span style="color:#aaa;font-size:12px;margin-left:8px;">PIN: ${u.pin}</span>
+      </span>
+      <button class="btn btn-danger btn-sm" onclick="removeUser('${u.id.replace(/'/g,"\\'")}')">Hapus</button>
+    </div>
+  `).join('') || '<p style="color:#999;font-size:13px;">Belum ada akun</p>';
+}
+
+async function addUser() {
+  const id = document.getElementById('new-user-id').value.trim();
+  const pin = document.getElementById('new-user-pin').value.trim();
+  const role = document.getElementById('new-user-role').value;
+  if (!id || !pin) { showToast('ID dan PIN wajib diisi!', 'error'); return; }
+  if (usersList.some(u => u.id === id)) { showToast('ID sudah dipakai!', 'error'); return; }
+  try {
+    await apiPost({ action: 'saveUser', user: { id, pin, role } });
+    await loadData();
+    document.getElementById('new-user-id').value = '';
+    document.getElementById('new-user-pin').value = '';
+    renderUsersList();
+    showToast('Akun ditambahkan!');
+  } catch (e) { showToast('Gagal menambah akun!', 'error'); console.error(e); }
+}
+
+async function removeUser(id) {
+  if (id === currentUser.id) { showToast('Tidak bisa menghapus akun sendiri!', 'error'); return; }
+  if (!confirm('Hapus akun ' + id + '?')) return;
+  try {
+    const res = await apiPost({ action: 'deleteUser', id });
+    if (res.error === 'need-admin') { showToast('Harus ada minimal 1 admin!', 'error'); return; }
+    await loadData();
+    renderUsersList();
+    showToast('Akun dihapus.');
+  } catch (e) { showToast('Gagal menghapus akun!', 'error'); console.error(e); }
+}
+
+function renderBarangList() {
+  document.getElementById('barang-list').innerHTML = barangList.map(b => `
+    <div class="list-item">
+      <span>${b}</span>
+      <button class="btn btn-danger btn-sm" onclick="removeBarang('${b.replace(/'/g,"\\'")}')">Hapus</button>
+    </div>
+  `).join('') || '<p style="color:#999;font-size:13px;">Belum ada data</p>';
+}
+
+async function addBarang() {
+  const v = document.getElementById('new-barang').value.trim();
+  if (!v) return;
+  if (barangList.includes(v)) { showToast('Barang sudah ada!', 'error'); return; }
+  barangList.push(v);
+  await saveConfig('barangList', barangList);
+  document.getElementById('new-barang').value = '';
+  renderBarangList();
+  renderPriceList();
+  showToast('Barang ditambahkan!');
+}
+
+async function removeBarang(name) {
+  if (!confirm('Hapus barang ' + name + '?')) return;
+  barangList = barangList.filter(b => b !== name);
+  await saveConfig('barangList', barangList);
+  renderBarangList();
+  renderPriceList();
+}
+
+function renderPriceList() {
+  document.getElementById('price-list').innerHTML = barangList.map(b => `
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px;">
+      <span style="flex:1;font-size:14px;">${b}</span>
+      <input type="number" min="0" placeholder="Harga default"
+        value="${priceMap[b] || ''}"
+        style="width:160px;padding:8px 10px;border:1.5px solid #ddd;border-radius:7px;font-size:14px;"
+        oninput="updatePrice('${b}', this.value)">
+    </div>
+  `).join('') || '<p style="color:#999;font-size:13px;">Tambahkan barang terlebih dahulu.</p>';
+}
+
+let priceSaveTimer = null;
+function updatePrice(barang, val) {
+  if (val) priceMap[barang] = parseFloat(val);
+  else delete priceMap[barang];
+  clearTimeout(priceSaveTimer);
+  priceSaveTimer = setTimeout(() => {
+    saveConfig('priceMap', priceMap).catch(e => {
+      showToast('Gagal menyimpan harga!', 'error'); console.error(e);
+    });
+  }, 600);
+}
+
+function exportCSV() {
+  if (!isAdmin()) { showToast('Hanya admin yang bisa export.', 'error'); return; }
+  if (!orders.length) { showToast('Tidak ada data untuk diexport!', 'error'); return; }
+  const SEP = ';';                          // pemisah kolom untuk Excel Indonesia
+  const cell = v => {
+    let s = (v === null || v === undefined) ? '' : String(v);
+    if (/[";\n]/.test(s)) s = '"' + s.replace(/"/g, '""') + '"';
+    return s;
+  };
+  const headers = ['No. Order', 'Tanggal', 'Sales', 'Pelanggan', 'Barang', 'Qty', 'Harga', 'Subtotal', 'Total Order'];
+  let csv = 'sep=' + SEP + '\n' + headers.join(SEP) + '\n';
+  orders.forEach(o => {
+    o.items.forEach((item, idx) => {
+      csv += [
+        o.no, o.date, o.sales, o.customer,
+        item.barang, item.qty, item.harga, item.subtotal,
+        idx === 0 ? o.total : ''
+      ].map(cell).join(SEP) + '\n';
+    });
+  });
+  const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'orders_' + todayKey() + '.csv'; a.click();
+  URL.revokeObjectURL(url);
+  showToast('File CSV berhasil didownload!');
+}
+
+function showToast(msg, type) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.style.background = type === 'error' ? '#c62828' : '#2e7d32';
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+function updateClock() {
+  const d = new Date();
+  document.getElementById('live-date').textContent =
+    `${d.getDate()} ${MONTHS[d.getMonth()]} ${d.getFullYear()}  |  ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}:${String(d.getSeconds()).padStart(2,'0')}`;
+}
+
+document.getElementById('detail-modal').addEventListener('click', function(e) {
+  if (e.target === this) closeModal();
+});
+
+updateClock();
+setInterval(updateClock, 1000);
+
+(async function init() {
+  if (!USE_SERVER) {
+    document.getElementById('login-err').textContent = 'API_URL belum diisi.';
+    return;
+  }
+  // Coba lanjutkan sesi yang tersimpan
+  const saved = sessionStorage.getItem('auth');
+  if (saved) {
+    try {
+      const u = JSON.parse(saved);
+      const d = await fetchData(u.id, u.pin);
+      if (d.ok) {
+        currentUser = { id: u.id, pin: u.pin, role: d.role };
+        applyData(d);
+        enterApp();
+        return;
+      }
+    } catch (e) { console.error(e); }
+    sessionStorage.removeItem('auth');
+  }
+  document.getElementById('login-id').focus();
+})();
+</script>
+</body>
+</html>
